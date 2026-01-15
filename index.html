@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AgriDock - Smart Agricultural Drone Control</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Status Bar Mockup -->
+        <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="status-icons">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-full"></i>
+            </div>
+        </div>
+
+        <!-- App Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-drone"></i>
+                    </div>
+                    <span class="logo-text">AgriDock</span>
+                </div>
+                <button class="notification-btn" id="notificationBtn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="app-main">
+            <!-- Drone Status Page -->
+            <section class="page active" id="dronePage">
+                <div class="page-header">
+                    <h1>Drone Status</h1>
+                    <span class="live-indicator">
+                        <span class="pulse"></span>
+                        LIVE
+                    </span>
+                </div>
+
+                <!-- Drone Visual Card -->
+                <div class="drone-visual-card">
+                    <div class="drone-3d">
+                        <div class="drone-icon-large">
+                            <i class="fas fa-drone-alt"></i>
+                        </div>
+                        <div class="drone-signal-rings">
+                            <div class="ring ring-1"></div>
+                            <div class="ring ring-2"></div>
+                            <div class="ring ring-3"></div>
+                        </div>
+                    </div>
+                    <div class="drone-info">
+                        <h2>AgriDock Pro X1</h2>
+                        <span class="drone-status active">
+                            <i class="fas fa-circle"></i>
+                            In Flight
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Primary Stats Grid -->
+                <div class="stats-grid primary">
+                    <div class="stat-card battery">
+                        <div class="stat-icon">
+                            <i class="fas fa-battery-three-quarters"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Battery</span>
+                            <div class="stat-value-row">
+                                <span class="stat-value">73%</span>
+                                <span class="stat-trend good">
+                                    <i class="fas fa-clock"></i>
+                                    ~18 min
+                                </span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill battery-fill" style="width: 73%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card spray">
+                        <div class="stat-icon">
+                            <i class="fas fa-tint"></i>
+                        </div>
+                        <div class="stat-content">
+                            <span class="stat-label">Spray Tank</span>
+                            <div class="stat-value-row">
+                                <span class="stat-value">45%</span>
+                                <span class="stat-trend warning">
+                                    <i class="fas fa-droplet"></i>
+                                    4.5L left
+                                </span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill spray-fill" style="width: 45%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Secondary Stats -->
+                <div class="stats-grid secondary">
+                    <div class="stat-card-small">
+                        <div class="stat-icon-small temp">
+                            <i class="fas fa-thermometer-half"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label-small">Battery Temp</span>
+                            <span class="stat-value-small">42°C</span>
+                        </div>
+                        <span class="status-badge good">Normal</span>
+                    </div>
+
+                    <div class="stat-card-small">
+                        <div class="stat-icon-small signal">
+                            <i class="fas fa-satellite-dish"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label-small">Signal</span>
+                            <span class="stat-value-small">-45 dBm</span>
+                        </div>
+                        <span class="status-badge excellent">Excellent</span>
+                    </div>
+
+                    <div class="stat-card-small">
+                        <div class="stat-icon-small altitude">
+                            <i class="fas fa-arrows-alt-v"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label-small">Altitude</span>
+                            <span class="stat-value-small">15m</span>
+                        </div>
+                        <span class="status-badge info">AGL</span>
+                    </div>
+
+                    <div class="stat-card-small">
+                        <div class="stat-icon-small speed">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label-small">Speed</span>
+                            <span class="stat-value-small">8.5 m/s</span>
+                        </div>
+                        <span class="status-badge info">Cruising</span>
+                    </div>
+
+                    <div class="stat-card-small">
+                        <div class="stat-icon-small gps">
+                            <i class="fas fa-satellite"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label-small">GPS Sats</span>
+                            <span class="stat-value-small">14</span>
+                        </div>
+                        <span class="status-badge excellent">Strong</span>
+                    </div>
+
+                    <div class="stat-card-small">
+                        <div class="stat-icon-small motor">
+                            <i class="fas fa-fan"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-label-small">Motor Temp</span>
+                            <span class="stat-value-small">38°C</span>
+                        </div>
+                        <span class="status-badge good">Optimal</span>
+                    </div>
+                </div>
+
+                <!-- Flight Progress -->
+                <div class="flight-progress-card">
+                    <div class="flight-progress-header">
+                        <h3>Mission Progress</h3>
+                        <span class="mission-id">#AGD-2026-0115</span>
+                    </div>
+                    <div class="flight-progress-bar">
+                        <div class="flight-progress-fill" style="width: 62%"></div>
+                    </div>
+                    <div class="flight-progress-stats">
+                        <div class="progress-stat">
+                            <span class="label">Area Covered</span>
+                            <span class="value">12.4 acres</span>
+                        </div>
+                        <div class="progress-stat">
+                            <span class="label">Remaining</span>
+                            <span class="value">7.6 acres</span>
+                        </div>
+                        <div class="progress-stat">
+                            <span class="label">ETA</span>
+                            <span class="value">14 min</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="action-btn emergency">
+                        <i class="fas fa-hand-paper"></i>
+                        <span>Emergency Stop</span>
+                    </button>
+                    <button class="action-btn return">
+                        <i class="fas fa-home"></i>
+                        <span>Return Home</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Dock Status Page -->
+            <section class="page" id="dockPage">
+                <div class="page-header">
+                    <h1>Dock Status</h1>
+                    <span class="live-indicator">
+                        <span class="pulse"></span>
+                        ONLINE
+                    </span>
+                </div>
+
+                <!-- Dock Visual Card -->
+                <div class="dock-visual-card">
+                    <div class="dock-3d">
+                        <div class="dock-icon-large">
+                            <i class="fas fa-warehouse"></i>
+                        </div>
+                        <div class="dock-activity-indicator active">
+                            <div class="activity-ring"></div>
+                        </div>
+                    </div>
+                    <div class="dock-info">
+                        <h2>AgriDock Station Alpha</h2>
+                        <span class="dock-status processing">
+                            <i class="fas fa-cog fa-spin"></i>
+                            Processing Drone
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Current Operation -->
+                <div class="operation-card">
+                    <div class="operation-header">
+                        <h3>Current Operation</h3>
+                        <span class="operation-timer">02:34</span>
+                    </div>
+                    <div class="operation-steps">
+                        <div class="step completed">
+                            <div class="step-icon">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="step-info">
+                                <span class="step-name">Drone Landed</span>
+                                <span class="step-time">9:38 AM</span>
+                            </div>
+                        </div>
+                        <div class="step completed">
+                            <div class="step-icon">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="step-info">
+                                <span class="step-name">Securing Drone</span>
+                                <span class="step-time">9:38 AM</span>
+                            </div>
+                        </div>
+                        <div class="step active">
+                            <div class="step-icon">
+                                <i class="fas fa-battery-half"></i>
+                            </div>
+                            <div class="step-info">
+                                <span class="step-name">Swapping Battery</span>
+                                <span class="step-time">In Progress...</span>
+                            </div>
+                            <div class="step-progress">
+                                <div class="step-progress-bar">
+                                    <div class="step-progress-fill" style="width: 65%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="step pending">
+                            <div class="step-icon">
+                                <i class="fas fa-tint"></i>
+                            </div>
+                            <div class="step-info">
+                                <span class="step-name">Refilling Spray Tank</span>
+                                <span class="step-time">Pending</span>
+                            </div>
+                        </div>
+                        <div class="step pending">
+                            <div class="step-icon">
+                                <i class="fas fa-plane-departure"></i>
+                            </div>
+                            <div class="step-info">
+                                <span class="step-name">Launch Drone</span>
+                                <span class="step-time">Pending</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dock Resources -->
+                <div class="resources-grid">
+                    <div class="resource-card">
+                        <div class="resource-header">
+                            <i class="fas fa-battery-full"></i>
+                            <h4>Battery Bay</h4>
+                        </div>
+                        <div class="resource-content">
+                            <div class="battery-slots">
+                                <div class="battery-slot full">
+                                    <div class="battery-indicator"></div>
+                                    <span>100%</span>
+                                </div>
+                                <div class="battery-slot full">
+                                    <div class="battery-indicator"></div>
+                                    <span>100%</span>
+                                </div>
+                                <div class="battery-slot charging">
+                                    <div class="battery-indicator"></div>
+                                    <span>67%</span>
+                                </div>
+                                <div class="battery-slot low">
+                                    <div class="battery-indicator"></div>
+                                    <span>23%</span>
+                                </div>
+                            </div>
+                            <div class="resource-summary">
+                                <span>2 Ready</span>
+                                <span>2 Charging</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="resource-card">
+                        <div class="resource-header">
+                            <i class="fas fa-fill-drip"></i>
+                            <h4>Spray Reservoir</h4>
+                        </div>
+                        <div class="resource-content">
+                            <div class="tank-visual">
+                                <div class="tank-fill" style="height: 78%"></div>
+                                <div class="tank-level">78%</div>
+                            </div>
+                            <div class="resource-details">
+                                <div class="detail-row">
+                                    <span>Capacity</span>
+                                    <span>50L</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Remaining</span>
+                                    <span>39L</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Est. Refills</span>
+                                    <span>~4</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dock Stats -->
+                <div class="dock-stats-card">
+                    <h3>Today's Statistics</h3>
+                    <div class="dock-stats-grid">
+                        <div class="dock-stat">
+                            <span class="dock-stat-value">12</span>
+                            <span class="dock-stat-label">Battery Swaps</span>
+                        </div>
+                        <div class="dock-stat">
+                            <span class="dock-stat-value">8</span>
+                            <span class="dock-stat-label">Tank Refills</span>
+                        </div>
+                        <div class="dock-stat">
+                            <span class="dock-stat-value">47</span>
+                            <span class="dock-stat-label">Flight Hours</span>
+                        </div>
+                        <div class="dock-stat">
+                            <span class="dock-stat-value">156</span>
+                            <span class="dock-stat-label">Acres Covered</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dock Health -->
+                <div class="dock-health-card">
+                    <h3>System Health</h3>
+                    <div class="health-items">
+                        <div class="health-item">
+                            <div class="health-info">
+                                <i class="fas fa-microchip"></i>
+                                <span>Control System</span>
+                            </div>
+                            <span class="health-status good">Operational</span>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-info">
+                                <i class="fas fa-robot"></i>
+                                <span>Robotic Arm</span>
+                            </div>
+                            <span class="health-status good">Operational</span>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-info">
+                                <i class="fas fa-charging-station"></i>
+                                <span>Charging System</span>
+                            </div>
+                            <span class="health-status good">Operational</span>
+                        </div>
+                        <div class="health-item">
+                            <div class="health-info">
+                                <i class="fas fa-pump-soap"></i>
+                                <span>Pump System</span>
+                            </div>
+                            <span class="health-status warning">Maintenance Soon</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Flight Planning Page -->
+            <section class="page" id="planPage">
+                <div class="page-header">
+                    <h1>Flight Planner</h1>
+                    <button class="header-action-btn" id="newPlanBtn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <!-- Map Container -->
+                <div class="map-container">
+                    <div class="map-view" id="mapView">
+                        <!-- Simulated satellite map background -->
+                        <div class="map-background"></div>
+                        
+                        <!-- Farm boundary overlay -->
+                        <svg class="map-overlay" id="mapOverlay">
+                            <defs>
+                                <pattern id="flightPattern" patternUnits="userSpaceOnUse" width="20" height="20">
+                                    <line x1="0" y1="0" x2="20" y2="0" stroke="var(--primary-color)" stroke-width="0.5" stroke-dasharray="4,4"/>
+                                </pattern>
+                            </defs>
+                            <!-- Field boundary will be drawn here -->
+                            <polygon id="fieldBoundary" class="field-boundary" points=""></polygon>
+                            <!-- Flight path will be drawn here -->
+                            <g id="flightPath" class="flight-path"></g>
+                            <!-- Boundary points -->
+                            <g id="boundaryPoints"></g>
+                        </svg>
+
+                        <!-- Map markers -->
+                        <div class="map-markers" id="mapMarkers">
+                            <div class="dock-marker" style="left: 20%; top: 75%;">
+                                <i class="fas fa-warehouse"></i>
+                                <span class="marker-label">Dock</span>
+                            </div>
+                        </div>
+
+                        <!-- Drawing instruction -->
+                        <div class="drawing-instruction" id="drawingInstruction">
+                            <i class="fas fa-hand-pointer"></i>
+                            <span>Tap points to outline your field</span>
+                        </div>
+                    </div>
+
+                    <!-- Map Controls -->
+                    <div class="map-controls">
+                        <button class="map-control-btn" id="zoomIn">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="map-control-btn" id="zoomOut">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button class="map-control-btn" id="locateBtn">
+                            <i class="fas fa-crosshairs"></i>
+                        </button>
+                        <button class="map-control-btn" id="layerBtn">
+                            <i class="fas fa-layer-group"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Drawing Tools -->
+                <div class="drawing-tools">
+                    <div class="tools-header">
+                        <h3>Smart Field Tools</h3>
+                    </div>
+                    <div class="tools-grid">
+                        <button class="tool-btn active" id="polygonTool" data-tool="polygon">
+                            <i class="fas fa-draw-polygon"></i>
+                            <span>Draw Field</span>
+                        </button>
+                        <button class="tool-btn" id="rectangleTool" data-tool="rectangle">
+                            <i class="fas fa-vector-square"></i>
+                            <span>Rectangle</span>
+                        </button>
+                        <button class="tool-btn" id="circleTool" data-tool="circle">
+                            <i class="fas fa-circle-notch"></i>
+                            <span>Circle Area</span>
+                        </button>
+                        <button class="tool-btn" id="importTool" data-tool="import">
+                            <i class="fas fa-file-import"></i>
+                            <span>Import KML</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Field Info Panel -->
+                <div class="field-info-panel" id="fieldInfoPanel">
+                    <div class="field-info-header">
+                        <h3>Field Analysis</h3>
+                        <button class="close-panel-btn" id="closeFieldPanel">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="field-stats">
+                        <div class="field-stat">
+                            <i class="fas fa-ruler-combined"></i>
+                            <div class="field-stat-info">
+                                <span class="label">Total Area</span>
+                                <span class="value" id="fieldArea">0 acres</span>
+                            </div>
+                        </div>
+                        <div class="field-stat">
+                            <i class="fas fa-road"></i>
+                            <div class="field-stat-info">
+                                <span class="label">Perimeter</span>
+                                <span class="value" id="fieldPerimeter">0 m</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Plan Generator -->
+                <div class="flight-plan-panel" id="flightPlanPanel">
+                    <div class="plan-header">
+                        <h3>Flight Plan Configuration</h3>
+                    </div>
+
+                    <div class="plan-options">
+                        <div class="option-group">
+                            <label>Spray Pattern</label>
+                            <div class="option-buttons">
+                                <button class="option-btn active" data-pattern="parallel">
+                                    <i class="fas fa-grip-lines"></i>
+                                    Parallel
+                                </button>
+                                <button class="option-btn" data-pattern="spiral">
+                                    <i class="fas fa-spinner"></i>
+                                    Spiral
+                                </button>
+                                <button class="option-btn" data-pattern="contour">
+                                    <i class="fas fa-water"></i>
+                                    Contour
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="option-group">
+                            <label>Spray Width</label>
+                            <div class="slider-container">
+                                <input type="range" id="sprayWidth" min="3" max="12" value="6" class="slider">
+                                <span class="slider-value" id="sprayWidthValue">6m</span>
+                            </div>
+                        </div>
+
+                        <div class="option-group">
+                            <label>Flight Altitude</label>
+                            <div class="slider-container">
+                                <input type="range" id="flightAltitude" min="5" max="30" value="15" class="slider">
+                                <span class="slider-value" id="flightAltitudeValue">15m</span>
+                            </div>
+                        </div>
+
+                        <div class="option-group">
+                            <label>Flight Speed</label>
+                            <div class="slider-container">
+                                <input type="range" id="flightSpeed" min="3" max="15" value="8" class="slider">
+                                <span class="slider-value" id="flightSpeedValue">8 m/s</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="generate-plan-btn" id="generatePlanBtn">
+                        <i class="fas fa-magic"></i>
+                        Generate Smart Flight Plan
+                    </button>
+                </div>
+
+                <!-- Generated Plan Summary -->
+                <div class="plan-summary" id="planSummary" style="display: none;">
+                    <div class="summary-header">
+                        <h3>Generated Flight Plan</h3>
+                        <span class="plan-status ready">
+                            <i class="fas fa-check-circle"></i>
+                            Ready
+                        </span>
+                    </div>
+                    <div class="summary-stats">
+                        <div class="summary-stat">
+                            <i class="fas fa-route"></i>
+                            <div>
+                                <span class="value" id="totalDistance">2.4 km</span>
+                                <span class="label">Total Distance</span>
+                            </div>
+                        </div>
+                        <div class="summary-stat">
+                            <i class="fas fa-clock"></i>
+                            <div>
+                                <span class="value" id="estimatedTime">18 min</span>
+                                <span class="label">Est. Time</span>
+                            </div>
+                        </div>
+                        <div class="summary-stat">
+                            <i class="fas fa-battery-full"></i>
+                            <div>
+                                <span class="value" id="batteryNeeded">45%</span>
+                                <span class="label">Battery Needed</span>
+                            </div>
+                        </div>
+                        <div class="summary-stat">
+                            <i class="fas fa-tint"></i>
+                            <div>
+                                <span class="value" id="sprayNeeded">7.2L</span>
+                                <span class="label">Spray Needed</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="summary-waypoints">
+                        <h4><i class="fas fa-map-marked-alt"></i> Waypoints: <span id="waypointCount">24</span></h4>
+                        <div class="waypoint-preview">
+                            <div class="waypoint start">
+                                <span class="wp-num">1</span>
+                                <span class="wp-type">Start</span>
+                            </div>
+                            <div class="waypoint-connector"></div>
+                            <div class="waypoint">
+                                <span class="wp-num">2-23</span>
+                                <span class="wp-type">Spray Path</span>
+                            </div>
+                            <div class="waypoint-connector"></div>
+                            <div class="waypoint end">
+                                <span class="wp-num">24</span>
+                                <span class="wp-type">Return</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="summary-actions">
+                        <button class="action-btn secondary" id="editPlanBtn">
+                            <i class="fas fa-edit"></i>
+                            Edit Plan
+                        </button>
+                        <button class="action-btn primary" id="startMissionBtn">
+                            <i class="fas fa-play"></i>
+                            Start Mission
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="plan-actions" id="planActions">
+                    <button class="plan-action-btn clear" id="clearFieldBtn">
+                        <i class="fas fa-trash-alt"></i>
+                        Clear Field
+                    </button>
+                    <button class="plan-action-btn finish" id="finishFieldBtn">
+                        <i class="fas fa-check"></i>
+                        Complete Field
+                    </button>
+                </div>
+            </section>
+
+            <!-- Settings Page -->
+            <section class="page" id="settingsPage">
+                <div class="page-header">
+                    <h1>Settings</h1>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Account</h3>
+                    <div class="profile-card">
+                        <div class="profile-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="profile-info">
+                            <span class="profile-name">John Farmer</span>
+                            <span class="profile-email">john@agridock.farm</span>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Drone Settings</h3>
+                    <div class="settings-list">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <i class="fas fa-drone"></i>
+                                <span>Drone Configuration</span>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Flight Limits</span>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <i class="fas fa-bell"></i>
+                                <span>Alert Thresholds</span>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Dock Settings</h3>
+                    <div class="settings-list">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <i class="fas fa-warehouse"></i>
+                                <span>Dock Configuration</span>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Maintenance Schedule</span>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>App Settings</h3>
+                    <div class="settings-list">
+                        <div class="setting-item toggle">
+                            <div class="setting-info">
+                                <i class="fas fa-moon"></i>
+                                <span>Dark Mode</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="darkModeToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-item toggle">
+                            <div class="setting-info">
+                                <i class="fas fa-bell"></i>
+                                <span>Push Notifications</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-item toggle">
+                            <div class="setting-info">
+                                <i class="fas fa-volume-up"></i>
+                                <span>Sound Alerts</span>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <i class="fas fa-ruler"></i>
+                                <span>Units</span>
+                            </div>
+                            <span class="setting-value">Metric</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Support</h3>
+                    <div class="settings-list">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <i class="fas fa-question-circle"></i>
+                                <span>Help Center</span>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <i class="fas fa-headset"></i>
+                                <span>Contact Support</span>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <i class="fas fa-info-circle"></i>
+                                <span>About AgriDock</span>
+                            </div>
+                            <span class="setting-value">v2.4.1</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-page="dronePage">
+                <i class="fas fa-drone"></i>
+                <span>Drone</span>
+            </button>
+            <button class="nav-item" data-page="dockPage">
+                <i class="fas fa-warehouse"></i>
+                <span>Dock</span>
+            </button>
+            <button class="nav-item" data-page="planPage">
+                <i class="fas fa-map-marked-alt"></i>
+                <span>Plan</span>
+            </button>
+            <button class="nav-item" data-page="settingsPage">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </button>
+        </nav>
+
+        <!-- Notification Panel -->
+        <div class="notification-panel" id="notificationPanel">
+            <div class="notification-header">
+                <h3>Notifications</h3>
+                <button class="close-btn" id="closeNotifications">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="notification-list">
+                <div class="notification-item warning">
+                    <div class="notification-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="notification-content">
+                        <span class="notification-title">Low Spray Level</span>
+                        <span class="notification-text">Drone tank below 50%. Return for refill recommended.</span>
+                        <span class="notification-time">2 min ago</span>
+                    </div>
+                </div>
+                <div class="notification-item info">
+                    <div class="notification-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="notification-content">
+                        <span class="notification-title">Dock Ready</span>
+                        <span class="notification-text">Battery swap completed. Drone ready for launch.</span>
+                        <span class="notification-time">15 min ago</span>
+                    </div>
+                </div>
+                <div class="notification-item success">
+                    <div class="notification-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="notification-content">
+                        <span class="notification-title">Mission Complete</span>
+                        <span class="notification-text">Field A spraying completed successfully.</span>
+                        <span class="notification-time">1 hour ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overlay -->
+        <div class="overlay" id="overlay"></div>
+
+        <!-- Mission Start Modal -->
+        <div class="modal" id="missionModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Start Mission</h3>
+                    <button class="close-btn" id="closeMissionModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="preflight-checklist">
+                        <h4>Pre-flight Checklist</h4>
+                        <div class="checklist-items">
+                            <div class="checklist-item checked">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Battery Level OK (73%)</span>
+                            </div>
+                            <div class="checklist-item checked">
+                                <i class="fas fa-check-circle"></i>
+                                <span>GPS Signal Strong (14 sats)</span>
+                            </div>
+                            <div class="checklist-item checked">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Weather Conditions Clear</span>
+                            </div>
+                            <div class="checklist-item checked">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Spray Tank Full (10L)</span>
+                            </div>
+                            <div class="checklist-item checked">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Flight Plan Validated</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-btn cancel" id="cancelMission">Cancel</button>
+                    <button class="modal-btn confirm" id="confirmMission">
+                        <i class="fas fa-play"></i>
+                        Launch Mission
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
