@@ -7,9 +7,16 @@ const appState = {
     currentPage: 'dronePage',
     activeTool: 'polygon',
     fieldPoints: [],
+    fieldPolygon: null,
+    flightPathLines: [],
     isDrawing: false,
     notificationPanelOpen: false,
-    isDarkMode: false
+    isDarkMode: false,
+    map: null,
+    userLocation: null,
+    dockMarker: null,
+    fieldMarkers: [],
+    chemicalMix: [40, 30, 30]
 };
 
 // ==================== //
@@ -205,70 +212,289 @@ function updateBatterySwapProgress() {
 // Flight Planning Tools
 // ==================== //
 function initFlightPlanning() {
+    initializeMap();
+    initDrawingTools();
+    initMapControls();
+}
+
+// Initialize Leaflet Map
+function initializeMap() {
     const mapView = document.getElementById('mapView');
-    const svg = document.getElementById('mapOverlay');
-    const fieldBoundary = document.getElementById('fieldBoundary');
-    const boundaryPoints = document.getElementById('boundaryPoints');
-    const flightPath = document.getElementById('flightPath');
+    const mapLoading = document.getElementById('mapLoading');
     
-    // Tool selection
+    // Show loading indicator
+    mapLoading.classList.remove('hidden');
+    
+    // Get user's location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                appState.userLocation = [lat, lon];
+                createMap(lat, lon);
+            },
+            (error) => {
+                // Fallback to a default location (agricultural area in California)
+                console.log('Location access denied, using default location');
+                const defaultLat = 36.7783;
+                const defaultLon = -119.4179;
+                appState.userLocation = [defaultLat, defaultLon];
+                createMap(defaultLat, defaultLon);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    } else {
+        // Browser doesn't support geolocation
+        const defaultLat = 36.7783;
+        const defaultLon = -119.4179;
+        appState.userLocation = [defaultLat, defaultLon];
+        createMap(defaultLat, defaultLon);
+    }
+}
+
+function createMap(lat, lon) {
+    const mapLoading = document.getElementById('mapLoading');
+    
+    // Initialize Leaflet map
+    appState.map = L.map('mapView', {
+        center: [lat, lon],
+        zoom: 16,
+        zoomControl: false,
+        attributionControl: false
+    });
+    
+    // Add satellite tile layer (using ESRI World Imagery)
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: '&copy; Esri'
+    }).addTo(appState.map);
+    
+    // Add a subtle overlay for better UI integration
+    const overlayPane = appState.map.createPane('overlay');
+    overlayPane.style.zIndex = 400;
+    overlayPane.style.pointerEvents = 'none';
+    
+    // Add dock marker at user's location
+    addDockMarker(lat, lon);
+    
+    // Enable polygon drawing now that map is ready
+    enablePolygonDrawing();
+    
+    // Hide loading indicator
+    setTimeout(() => {
+        mapLoading.classList.add('hidden');
+    }, 500);
+}
+
+function addDockMarker(lat, lon) {
+    const dockIcon = L.divIcon({
+        html: '<div class="dock-marker-icon"><i class="fas fa-warehouse"></i></div>',
+        className: 'custom-marker',
+        iconSize: [36, 44],
+        iconAnchor: [18, 44]
+    });
+    
+    appState.dockMarker = L.marker([lat, lon], { icon: dockIcon })
+        .addTo(appState.map)
+        .bindPopup('<strong>AgriDock Station</strong><br>Home Base');
+}
+
+// Initialize Drawing Tools
+function initDrawingTools() {
     const toolButtons = document.querySelectorAll('.tool-btn');
+    
     toolButtons.forEach(btn => {
         btn.addEventListener('click', () => {
+            const tool = btn.dataset.tool;
+            
             toolButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            appState.activeTool = btn.dataset.tool;
+            appState.activeTool = tool;
             
-            if (appState.activeTool !== 'polygon') {
-                alert('Tool coming soon! Use Draw Field for now.');
+            if (tool === 'polygon') {
+                enablePolygonDrawing();
+            } else if (tool === 'rectangle') {
+                drawRectangle();
+            } else if (tool === 'circle') {
+                drawCircle();
+            } else if (tool === 'import') {
+                alert('KML import functionality would allow importing field boundaries from external files.');
             }
         });
     });
+}
+
+function enablePolygonDrawing() {
+    if (!appState.map) return;
     
-    // Map drawing
-    svg.addEventListener('click', (e) => {
+    // Remove existing click handler
+    appState.map.off('click');
+    
+    // Add new click handler for polygon drawing
+    appState.map.on('click', (e) => {
         if (appState.activeTool === 'polygon') {
-            const rect = svg.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            appState.fieldPoints.push({ x, y });
-            
-            // Add point marker
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', x);
-            circle.setAttribute('cy', y);
-            circle.setAttribute('r', '6');
-            circle.setAttribute('fill', '#10b981');
-            circle.setAttribute('stroke', 'white');
-            circle.setAttribute('stroke-width', '2');
-            boundaryPoints.appendChild(circle);
-            
-            // Update polygon
-            updateFieldBoundary();
-            
-            // Hide instruction after first point
-            if (appState.fieldPoints.length === 1) {
-                document.getElementById('drawingInstruction').style.display = 'none';
-            }
+            addFieldPoint(e.latlng);
         }
     });
+}
+
+function addFieldPoint(latlng) {
+    // Add point to array
+    appState.fieldPoints.push(latlng);
     
-    // Clear field button
-    document.getElementById('clearFieldBtn').addEventListener('click', () => {
-        appState.fieldPoints = [];
-        boundaryPoints.innerHTML = '';
-        fieldBoundary.setAttribute('points', '');
-        flightPath.innerHTML = '';
-        document.getElementById('drawingInstruction').style.display = 'flex';
-        document.getElementById('fieldInfoPanel').style.display = 'none';
-        document.getElementById('planSummary').style.display = 'none';
+    // Create marker for the point
+    const pointIcon = L.divIcon({
+        html: '<div class="field-point-marker"></div>',
+        className: 'custom-marker',
+        iconSize: [12, 12],
+        iconAnchor: [6, 6]
     });
+    
+    const marker = L.marker(latlng, { icon: pointIcon }).addTo(appState.map);
+    appState.fieldMarkers.push(marker);
+    
+    // Update polygon
+    updateFieldPolygon();
+    
+    // Hide instruction after first point
+    if (appState.fieldPoints.length === 1) {
+        document.getElementById('drawingInstruction').classList.add('hidden');
+    }
+}
+
+function updateFieldPolygon() {
+    // Remove existing polygon
+    if (appState.fieldPolygon) {
+        appState.map.removeLayer(appState.fieldPolygon);
+    }
+    
+    // Create new polygon if we have at least 2 points
+    if (appState.fieldPoints.length >= 2) {
+        appState.fieldPolygon = L.polygon(appState.fieldPoints, {
+            color: '#10b981',
+            fillColor: '#10b981',
+            fillOpacity: 0.2,
+            weight: 3
+        }).addTo(appState.map);
+    }
+}
+
+function drawRectangle() {
+    if (!appState.userLocation) return;
+    
+    clearField();
+    
+    // Create a rectangle around the dock
+    const lat = appState.userLocation[0];
+    const lon = appState.userLocation[1];
+    const offset = 0.002; // Approximately 220 meters
+    
+    const bounds = [
+        [lat - offset, lon - offset],
+        [lat + offset, lon + offset]
+    ];
+    
+    appState.fieldPoints = [
+        L.latLng(bounds[0][0], bounds[0][1]),
+        L.latLng(bounds[0][0], bounds[1][1]),
+        L.latLng(bounds[1][0], bounds[1][1]),
+        L.latLng(bounds[1][0], bounds[0][1])
+    ];
+    
+    // Add markers for each corner
+    appState.fieldPoints.forEach(point => {
+        const pointIcon = L.divIcon({
+            html: '<div class="field-point-marker"></div>',
+            className: 'custom-marker',
+            iconSize: [12, 12],
+            iconAnchor: [6, 6]
+        });
+        const marker = L.marker(point, { icon: pointIcon }).addTo(appState.map);
+        appState.fieldMarkers.push(marker);
+    });
+    
+    updateFieldPolygon();
+    calculateFieldStats();
+    document.getElementById('fieldInfoPanel').style.display = 'block';
+    document.getElementById('drawingInstruction').classList.add('hidden');
+}
+
+function drawCircle() {
+    if (!appState.userLocation) return;
+    
+    clearField();
+    
+    // Create a circular field around the dock
+    const lat = appState.userLocation[0];
+    const lon = appState.userLocation[1];
+    const radius = 0.0015; // Approximately 165 meters
+    const segments = 16;
+    
+    for (let i = 0; i < segments; i++) {
+        const angle = (i / segments) * 2 * Math.PI;
+        const pointLat = lat + radius * Math.cos(angle);
+        const pointLon = lon + radius * Math.sin(angle);
+        
+        const point = L.latLng(pointLat, pointLon);
+        appState.fieldPoints.push(point);
+        
+        const pointIcon = L.divIcon({
+            html: '<div class="field-point-marker"></div>',
+            className: 'custom-marker',
+            iconSize: [12, 12],
+            iconAnchor: [6, 6]
+        });
+        const marker = L.marker(point, { icon: pointIcon }).addTo(appState.map);
+        appState.fieldMarkers.push(marker);
+    }
+    
+    updateFieldPolygon();
+    calculateFieldStats();
+    document.getElementById('fieldInfoPanel').style.display = 'block';
+    document.getElementById('drawingInstruction').classList.add('hidden');
+}
+
+function clearField() {
+    // Clear field points
+    appState.fieldPoints = [];
+    
+    // Remove all markers
+    appState.fieldMarkers.forEach(marker => appState.map.removeLayer(marker));
+    appState.fieldMarkers = [];
+    
+    // Remove polygon
+    if (appState.fieldPolygon) {
+        appState.map.removeLayer(appState.fieldPolygon);
+        appState.fieldPolygon = null;
+    }
+    
+    // Remove flight path
+    clearFlightPath();
+    
+    // Show instruction
+    document.getElementById('drawingInstruction').classList.remove('hidden');
+    document.getElementById('fieldInfoPanel').style.display = 'none';
+    document.getElementById('planSummary').style.display = 'none';
+}
+
+function clearFlightPath() {
+    appState.flightPathLines.forEach(line => appState.map.removeLayer(line));
+    appState.flightPathLines = [];
+}
+
+// Initialize Map Controls
+function initMapControls() {
+    // Clear field button
+    document.getElementById('clearFieldBtn').addEventListener('click', clearField);
     
     // Finish field button
     document.getElementById('finishFieldBtn').addEventListener('click', () => {
         if (appState.fieldPoints.length >= 3) {
-            updateFieldBoundary();
             calculateFieldStats();
             document.getElementById('fieldInfoPanel').style.display = 'block';
         } else {
@@ -281,61 +507,67 @@ function initFlightPlanning() {
         document.getElementById('fieldInfoPanel').style.display = 'none';
     });
     
-    // Map controls
+    // Map control buttons
     document.getElementById('zoomIn').addEventListener('click', () => {
-        alert('Zoom in functionality would integrate with a real map API');
+        if (appState.map) {
+            appState.map.zoomIn();
+        }
     });
     
     document.getElementById('zoomOut').addEventListener('click', () => {
-        alert('Zoom out functionality would integrate with a real map API');
+        if (appState.map) {
+            appState.map.zoomOut();
+        }
     });
     
     document.getElementById('locateBtn').addEventListener('click', () => {
-        alert('Location functionality would use device GPS');
+        if (appState.map && appState.userLocation) {
+            appState.map.setView(appState.userLocation, 16);
+        }
     });
     
     document.getElementById('layerBtn').addEventListener('click', () => {
-        alert('Layer selection would show satellite/terrain options');
+        // Toggle between satellite and map view
+        alert('Layer toggle: Switch between satellite, terrain, and street map views.');
     });
-}
-
-function updateFieldBoundary() {
-    const fieldBoundary = document.getElementById('fieldBoundary');
-    
-    if (appState.fieldPoints.length >= 2) {
-        const pointsStr = appState.fieldPoints.map(p => `${p.x},${p.y}`).join(' ');
-        fieldBoundary.setAttribute('points', pointsStr);
-    }
 }
 
 function calculateFieldStats() {
     if (appState.fieldPoints.length < 3) return;
     
-    // Calculate area using shoelace formula
+    // Calculate area using turf.js algorithm (shoelace formula adapted for lat/lng)
     let area = 0;
     const n = appState.fieldPoints.length;
     
+    // Convert to meters using Haversine approximation
+    const toRadians = (deg) => deg * (Math.PI / 180);
+    const earthRadius = 6371000; // meters
+    
+    // Calculate area in square meters
     for (let i = 0; i < n; i++) {
         const j = (i + 1) % n;
-        area += appState.fieldPoints[i].x * appState.fieldPoints[j].y;
-        area -= appState.fieldPoints[j].x * appState.fieldPoints[i].y;
+        const lat1 = toRadians(appState.fieldPoints[i].lat);
+        const lat2 = toRadians(appState.fieldPoints[j].lat);
+        const lon1 = toRadians(appState.fieldPoints[i].lng);
+        const lon2 = toRadians(appState.fieldPoints[j].lng);
+        
+        area += (lon2 - lon1) * (2 + Math.sin(lat1) + Math.sin(lat2));
     }
     
-    area = Math.abs(area / 2);
+    area = Math.abs(area * earthRadius * earthRadius / 2);
     
-    // Convert pixels to acres (simulated - would use real coordinates)
-    const acres = (area / 1000).toFixed(1);
+    // Convert to acres (1 acre = 4046.86 square meters)
+    const acres = (area / 4046.86).toFixed(2);
     
     // Calculate perimeter
     let perimeter = 0;
     for (let i = 0; i < n; i++) {
         const j = (i + 1) % n;
-        const dx = appState.fieldPoints[j].x - appState.fieldPoints[i].x;
-        const dy = appState.fieldPoints[j].y - appState.fieldPoints[i].y;
-        perimeter += Math.sqrt(dx * dx + dy * dy);
+        const distance = appState.map.distance(appState.fieldPoints[i], appState.fieldPoints[j]);
+        perimeter += distance;
     }
     
-    const perimeterMeters = Math.floor(perimeter * 0.5);
+    const perimeterMeters = Math.floor(perimeter);
     
     // Update UI
     document.getElementById('fieldArea').textContent = `${acres} acres`;
@@ -373,11 +605,19 @@ function initFlightPlanConfig() {
     speedSlider.addEventListener('input', (e) => {
         speedValue.textContent = e.target.value + ' m/s';
     });
+
+    // Chemical mix controls
+    initChemicalMixControls();
     
     // Generate plan button
     document.getElementById('generatePlanBtn').addEventListener('click', () => {
         if (appState.fieldPoints.length < 3) {
             alert('Please define a field first by drawing on the map.');
+            return;
+        }
+        const total = getChemicalMixTotal();
+        if (total !== 100) {
+            alert('Chemical mix must total 100% before generating a plan.');
             return;
         }
         
@@ -395,68 +635,94 @@ function initFlightPlanConfig() {
     });
 }
 
-function generateFlightPlan() {
-    // Simulate flight plan generation
-    const flightPath = document.getElementById('flightPath');
-    flightPath.innerHTML = '';
+function initChemicalMixControls() {
+    const sliders = document.querySelectorAll('.chemical-slider');
+    if (!sliders.length) return;
     
-    // Generate parallel lines across the field
-    if (appState.fieldPoints.length >= 3) {
-        // Find bounds
-        const xs = appState.fieldPoints.map(p => p.x);
-        const ys = appState.fieldPoints.map(p => p.y);
-        const minX = Math.min(...xs);
-        const maxX = Math.max(...xs);
-        const minY = Math.min(...ys);
-        const maxY = Math.max(...ys);
-        
-        const sprayWidth = parseInt(document.getElementById('sprayWidth').value);
-        const lineSpacing = sprayWidth * 3; // Scaled for display
-        
-        let y = minY + lineSpacing;
-        let direction = 1;
-        
-        while (y < maxY) {
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    sliders.forEach(slider => {
+        slider.addEventListener('input', (e) => {
+            const idx = parseInt(slider.dataset.index, 10);
+            const rawValue = parseInt(e.target.value, 10);
+            appState.chemicalMix[idx] = rawValue;
             
-            if (direction === 1) {
-                line.setAttribute('x1', minX);
-                line.setAttribute('x2', maxX);
-            } else {
-                line.setAttribute('x1', maxX);
-                line.setAttribute('x2', minX);
+            // Keep total at or below 100% by trimming the slider that was just moved
+            const total = getChemicalMixTotal();
+            if (total > 100) {
+                const adjusted = Math.max(0, rawValue - (total - 100));
+                appState.chemicalMix[idx] = adjusted;
+                slider.value = adjusted;
             }
             
-            line.setAttribute('y1', y);
-            line.setAttribute('y2', y);
-            line.setAttribute('stroke', '#3b82f6');
-            line.setAttribute('stroke-width', '2');
-            line.setAttribute('stroke-dasharray', '8,4');
-            
-            flightPath.appendChild(line);
-            
-            y += lineSpacing;
-            direction *= -1;
-        }
+            updateChemicalMixUI();
+        });
+    });
+    
+    updateChemicalMixUI();
+}
+
+function getChemicalMixTotal() {
+    return appState.chemicalMix.reduce((sum, value) => sum + value, 0);
+}
+
+function updateChemicalMixUI() {
+    const mixTotal = document.getElementById('mixTotal');
+    const sliders = document.querySelectorAll('.chemical-slider');
+    const total = getChemicalMixTotal();
+    
+    if (mixTotal) {
+        mixTotal.textContent = `Total: ${total}%`;
+        mixTotal.classList.toggle('error', total !== 100);
     }
     
-    // Calculate stats
-    const area = parseFloat(document.getElementById('fieldArea').textContent);
-    const speed = parseFloat(document.getElementById('flightSpeed').value);
+    appState.chemicalMix.forEach((value, idx) => {
+        const labelId = `jug${String.fromCharCode(65 + idx)}Value`;
+        const resultId = `jug${String.fromCharCode(65 + idx)}Result`;
+        const slider = sliders[idx];
+        if (slider) {
+            slider.value = value;
+        }
+        const valueLabel = document.getElementById(labelId);
+        if (valueLabel) {
+            valueLabel.textContent = `${value}%`;
+        }
+        const resultLabel = document.getElementById(resultId);
+        if (resultLabel) {
+            resultLabel.textContent = `${value}%`;
+        }
+    });
+}
+
+function generateFlightPlan() {
+    if (appState.fieldPoints.length < 3) {
+        alert('Please define a field first by drawing on the map.');
+        return;
+    }
+    
+    // Clear existing flight path
+    clearFlightPath();
+    
+    // Get configuration
+    const sprayWidth = parseFloat(document.getElementById('sprayWidth').value);
     const altitude = parseFloat(document.getElementById('flightAltitude').value);
+    const speed = parseFloat(document.getElementById('flightSpeed').value);
+    const pattern = document.querySelector('[data-pattern].active').dataset.pattern;
     
-    const distance = (area * 200 + Math.random() * 500).toFixed(1);
-    const time = Math.floor(distance / speed / 60);
-    const battery = Math.floor(time * 2.5);
-    const spray = (area * 3.6).toFixed(1);
-    const waypoints = Math.floor(distance / 100) + 2;
+    // Generate flight path based on pattern
+    let waypoints = [];
     
-    // Update UI
-    document.getElementById('totalDistance').textContent = `${distance} m`;
-    document.getElementById('estimatedTime').textContent = `${time} min`;
-    document.getElementById('batteryNeeded').textContent = `${battery}%`;
-    document.getElementById('sprayNeeded').textContent = `${spray}L`;
-    document.getElementById('waypointCount').textContent = waypoints;
+    if (pattern === 'parallel') {
+        waypoints = generateParallelPattern(sprayWidth);
+    } else if (pattern === 'spiral') {
+        waypoints = generateSpiralPattern(sprayWidth);
+    } else if (pattern === 'contour') {
+        waypoints = generateContourPattern(sprayWidth);
+    }
+    
+    // Draw flight path on map
+    drawFlightPath(waypoints);
+    
+    // Calculate mission statistics
+    calculateMissionStats(waypoints, speed, altitude);
     
     // Show summary
     document.getElementById('planSummary').style.display = 'block';
@@ -465,6 +731,267 @@ function generateFlightPlan() {
     setTimeout(() => {
         document.getElementById('planSummary').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 300);
+}
+
+function generateParallelPattern(sprayWidthMeters) {
+    // Find the bounds of the field
+    const bounds = L.latLngBounds(appState.fieldPoints);
+    const ne = bounds.getNorthEast();
+    const sw = bounds.getSouthWest();
+    
+    // Calculate spray width in degrees (approximate)
+    const metersPerDegreeLat = 111320;
+    const sprayWidthDegrees = sprayWidthMeters / metersPerDegreeLat;
+    
+    // Determine the field orientation for optimal coverage
+    const width = ne.lng - sw.lng;
+    const height = ne.lat - sw.lat;
+    const isWiderThanTall = width > height;
+    
+    const waypoints = [];
+    
+    // Start from dock location
+    if (appState.userLocation) {
+        waypoints.push(L.latLng(appState.userLocation[0], appState.userLocation[1]));
+    }
+    
+    if (isWiderThanTall) {
+        // Fly north-south lines
+        let lng = sw.lng + sprayWidthDegrees / 2;
+        let direction = 1; // 1 for north, -1 for south
+        
+        while (lng <= ne.lng) {
+            if (direction === 1) {
+                waypoints.push(L.latLng(sw.lat, lng));
+                waypoints.push(L.latLng(ne.lat, lng));
+            } else {
+                waypoints.push(L.latLng(ne.lat, lng));
+                waypoints.push(L.latLng(sw.lat, lng));
+            }
+            
+            lng += sprayWidthDegrees;
+            direction *= -1;
+        }
+    } else {
+        // Fly east-west lines
+        let lat = sw.lat + sprayWidthDegrees / 2;
+        let direction = 1; // 1 for east, -1 for west
+        
+        while (lat <= ne.lat) {
+            if (direction === 1) {
+                waypoints.push(L.latLng(lat, sw.lng));
+                waypoints.push(L.latLng(lat, ne.lng));
+            } else {
+                waypoints.push(L.latLng(lat, ne.lng));
+                waypoints.push(L.latLng(lat, sw.lng));
+            }
+            
+            lat += sprayWidthDegrees;
+            direction *= -1;
+        }
+    }
+    
+    // Return to dock
+    if (appState.userLocation) {
+        waypoints.push(L.latLng(appState.userLocation[0], appState.userLocation[1]));
+    }
+    
+    return waypoints;
+}
+
+function generateSpiralPattern(sprayWidthMeters) {
+    // Calculate center of field
+    const bounds = L.latLngBounds(appState.fieldPoints);
+    const center = bounds.getCenter();
+    
+    const metersPerDegreeLat = 111320;
+    const sprayWidthDegrees = sprayWidthMeters / metersPerDegreeLat;
+    
+    const waypoints = [];
+    
+    // Start from dock
+    if (appState.userLocation) {
+        waypoints.push(L.latLng(appState.userLocation[0], appState.userLocation[1]));
+    }
+    
+    // Generate spiral from outside to inside
+    const maxRadius = Math.max(
+        bounds.getNorthEast().distanceTo(center),
+        bounds.getSouthWest().distanceTo(center)
+    ) / metersPerDegreeLat / metersPerDegreeLat;
+    
+    let radius = maxRadius;
+    let angle = 0;
+    const angleStep = Math.PI / 8; // 22.5 degrees
+    
+    while (radius > sprayWidthDegrees) {
+        const lat = center.lat + radius * Math.cos(angle);
+        const lng = center.lng + radius * Math.sin(angle);
+        const point = L.latLng(lat, lng);
+        
+        // Only add if inside field polygon
+        if (isPointInPolygon(point, appState.fieldPoints)) {
+            waypoints.push(point);
+        }
+        
+        angle += angleStep;
+        radius -= sprayWidthDegrees / 8;
+    }
+    
+    // Return to dock
+    if (appState.userLocation) {
+        waypoints.push(L.latLng(appState.userLocation[0], appState.userLocation[1]));
+    }
+    
+    return waypoints;
+}
+
+function generateContourPattern(sprayWidthMeters) {
+    // Generate paths that follow the field boundary
+    const waypoints = [];
+    
+    // Start from dock
+    if (appState.userLocation) {
+        waypoints.push(L.latLng(appState.userLocation[0], appState.userLocation[1]));
+    }
+    
+    const metersPerDegreeLat = 111320;
+    const sprayWidthDegrees = sprayWidthMeters / metersPerDegreeLat;
+    
+    // Create concentric paths following field shape
+    const center = L.latLngBounds(appState.fieldPoints).getCenter();
+    
+    for (let offset = 0; offset < 5; offset++) {
+        const scale = 1 - (offset * sprayWidthDegrees * 2);
+        if (scale <= 0.1) break;
+        
+        appState.fieldPoints.forEach((point, i) => {
+            // Scale point towards center
+            const lat = center.lat + (point.lat - center.lat) * scale;
+            const lng = center.lng + (point.lng - center.lng) * scale;
+            waypoints.push(L.latLng(lat, lng));
+        });
+        
+        // Close the loop
+        const firstScaled = appState.fieldPoints[0];
+        const lat = center.lat + (firstScaled.lat - center.lat) * scale;
+        const lng = center.lng + (firstScaled.lng - center.lng) * scale;
+        waypoints.push(L.latLng(lat, lng));
+    }
+    
+    // Return to dock
+    if (appState.userLocation) {
+        waypoints.push(L.latLng(appState.userLocation[0], appState.userLocation[1]));
+    }
+    
+    return waypoints;
+}
+
+function drawFlightPath(waypoints) {
+    if (waypoints.length < 2) return;
+    
+    // Create a polyline with all waypoints for the complete flight path
+    const completePath = L.polyline(waypoints, {
+        color: '#3b82f6',
+        weight: 3,
+        opacity: 0.85,
+        dashArray: '8, 4',
+        lineCap: 'round',
+        lineJoin: 'round'
+    }).addTo(appState.map);
+    
+    appState.flightPathLines.push(completePath);
+    
+    // Add waypoint markers at regular intervals
+    const waypointIcon = L.divIcon({
+        html: '<div class="waypoint-marker"></div>',
+        className: 'custom-marker',
+        iconSize: [8, 8],
+        iconAnchor: [4, 4]
+    });
+    
+    // Add markers at every waypoint for clear visibility
+    waypoints.forEach((point, i) => {
+        // Add marker at every waypoint
+        const marker = L.marker(point, { 
+            icon: waypointIcon,
+            title: `Waypoint ${i + 1}`
+        }).addTo(appState.map);
+        appState.flightPathLines.push(marker);
+    });
+    
+    // Add numbered start and end markers
+    const startIcon = L.divIcon({
+        html: '<div class="start-waypoint-marker"><span>START</span></div>',
+        className: 'custom-marker start',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+    });
+    
+    const endIcon = L.divIcon({
+        html: '<div class="end-waypoint-marker"><span>END</span></div>',
+        className: 'custom-marker end',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+    });
+    
+    if (waypoints.length > 0) {
+        const startMarker = L.marker(waypoints[0], { icon: startIcon }).addTo(appState.map);
+        appState.flightPathLines.push(startMarker);
+        
+        const endMarker = L.marker(waypoints[waypoints.length - 1], { icon: endIcon }).addTo(appState.map);
+        appState.flightPathLines.push(endMarker);
+    }
+    
+    // Fit map to show entire flight path
+    const flightBounds = L.latLngBounds(waypoints);
+    appState.map.fitBounds(flightBounds, { padding: [50, 50] });
+}
+
+function calculateMissionStats(waypoints, speedMS, altitude) {
+    // Calculate total distance
+    let totalDistance = 0;
+    for (let i = 0; i < waypoints.length - 1; i++) {
+        totalDistance += appState.map.distance(waypoints[i], waypoints[i + 1]);
+    }
+    
+    // Calculate time (distance / speed)
+    const timeSeconds = totalDistance / speedMS;
+    const timeMinutes = Math.ceil(timeSeconds / 60);
+    
+    // Calculate battery usage (assume 2.5% per minute)
+    const batteryNeeded = Math.min(100, Math.ceil(timeMinutes * 2.5));
+    
+    // Calculate spray needed based on area
+    const area = parseFloat(document.getElementById('fieldArea').textContent);
+    const sprayPerAcre = 3.5; // Liters per acre
+    const sprayNeeded = (area * sprayPerAcre).toFixed(1);
+    
+    // Update UI
+    document.getElementById('totalDistance').textContent = `${(totalDistance / 1000).toFixed(2)} km`;
+    document.getElementById('estimatedTime').textContent = `${timeMinutes} min`;
+    document.getElementById('batteryNeeded').textContent = `${batteryNeeded}%`;
+    document.getElementById('sprayNeeded').textContent = `${sprayNeeded}L`;
+    document.getElementById('waypointCount').textContent = waypoints.length;
+}
+
+function isPointInPolygon(point, polygon) {
+    let inside = false;
+    const x = point.lng;
+    const y = point.lat;
+    
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].lng;
+        const yi = polygon[i].lat;
+        const xj = polygon[j].lng;
+        const yj = polygon[j].lat;
+        
+        const intersect = ((yi > y) !== (yj > y)) && 
+                         (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    
+    return inside;
 }
 
 // ==================== //

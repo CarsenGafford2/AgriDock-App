@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -24,9 +26,7 @@
         <header class="app-header">
             <div class="header-content">
                 <div class="logo">
-                    <div class="logo-icon">
-                        <i class="fas fa-drone"></i>
-                    </div>
+                    <img src="logo.png" alt="AgriDock Logo" class="logo-icon-img">
                     <span class="logo-text">AgriDock</span>
                 </div>
                 <button class="notification-btn" id="notificationBtn">
@@ -52,7 +52,7 @@
                 <div class="drone-visual-card">
                     <div class="drone-3d">
                         <div class="drone-icon-large">
-                            <i class="fas fa-drone-alt"></i>
+                            <i class="fa-solid fa-helicopter"></i>
                         </div>
                         <div class="drone-signal-rings">
                             <div class="ring ring-1"></div>
@@ -61,7 +61,7 @@
                         </div>
                     </div>
                     <div class="drone-info">
-                        <h2>AgriDock Pro X1</h2>
+                        <h2>AgriDock Drone</h2>
                         <span class="drone-status active">
                             <i class="fas fa-circle"></i>
                             In Flight
@@ -81,7 +81,7 @@
                                 <span class="stat-value">73%</span>
                                 <span class="stat-trend good">
                                     <i class="fas fa-clock"></i>
-                                    ~18 min
+                                    ~5 min
                                 </span>
                             </div>
                             <div class="progress-bar">
@@ -100,7 +100,7 @@
                                 <span class="stat-value">45%</span>
                                 <span class="stat-trend warning">
                                     <i class="fas fa-droplet"></i>
-                                    4.5L left
+                                    45L left
                                 </span>
                             </div>
                             <div class="progress-bar">
@@ -118,7 +118,7 @@
                         </div>
                         <div class="stat-info">
                             <span class="stat-label-small">Battery Temp</span>
-                            <span class="stat-value-small">42°C</span>
+                            <span class="stat-value-small">42&deg;C</span>
                         </div>
                         <span class="status-badge good">Normal</span>
                     </div>
@@ -173,7 +173,7 @@
                         </div>
                         <div class="stat-info">
                             <span class="stat-label-small">Motor Temp</span>
-                            <span class="stat-value-small">38°C</span>
+                            <span class="stat-value-small">38&deg;C</span>
                         </div>
                         <span class="status-badge good">Optimal</span>
                     </div>
@@ -238,7 +238,7 @@
                         </div>
                     </div>
                     <div class="dock-info">
-                        <h2>AgriDock Station Alpha</h2>
+                        <h2>AgriDock Docking Station</h2>
                         <span class="dock-status processing">
                             <i class="fas fa-cog fa-spin"></i>
                             Processing Drone
@@ -338,30 +338,43 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="resource-card">
-                        <div class="resource-header">
-                            <i class="fas fa-fill-drip"></i>
-                            <h4>Spray Reservoir</h4>
-                        </div>
-                        <div class="resource-content">
-                            <div class="tank-visual">
-                                <div class="tank-fill" style="height: 78%"></div>
-                                <div class="tank-level">78%</div>
+                <!-- Chemical Jugs -->
+                <div class="chemical-jugs-card">
+                    <div class="section-header">
+                        <h3>Chemical Barrels</h3>
+                        <span class="note">Independent storage</span>
+                    </div>
+                    <div class="jug-grid">
+                        <div class="jug-card">
+                            <div class="jug-visual">
+                                <div class="jug-fill" style="height: 72%"></div>
                             </div>
-                            <div class="resource-details">
-                                <div class="detail-row">
-                                    <span>Capacity</span>
-                                    <span>50L</span>
-                                </div>
-                                <div class="detail-row">
-                                    <span>Remaining</span>
-                                    <span>39L</span>
-                                </div>
-                                <div class="detail-row">
-                                    <span>Est. Refills</span>
-                                    <span>~4</span>
-                                </div>
+                            <div class="jug-info">
+                                <span class="jug-name">Barrel A</span>
+                                <span class="jug-level">72% • 115.2L</span>
+                                <span class="jug-chem">Chemical A</span>
+                            </div>
+                        </div>
+                        <div class="jug-card">
+                            <div class="jug-visual">
+                                <div class="jug-fill" style="height: 54%"></div>
+                            </div>
+                            <div class="jug-info">
+                                <span class="jug-name">Barrel B</span>
+                                <span class="jug-level">54% • 86.4L</span>
+                                <span class="jug-chem">Chemical B</span>
+                            </div>
+                        </div>
+                        <div class="jug-card">
+                            <div class="jug-visual">
+                                <div class="jug-fill" style="height: 38%"></div>
+                            </div>
+                            <div class="jug-info">
+                                <span class="jug-name">Barrel C</span>
+                                <span class="jug-level">38% • 60.8L</span>
+                                <span class="jug-chem">Chemical C</span>
                             </div>
                         </div>
                     </div>
@@ -438,37 +451,19 @@
                 <!-- Map Container -->
                 <div class="map-container">
                     <div class="map-view" id="mapView">
-                        <!-- Simulated satellite map background -->
-                        <div class="map-background"></div>
-                        
-                        <!-- Farm boundary overlay -->
-                        <svg class="map-overlay" id="mapOverlay">
-                            <defs>
-                                <pattern id="flightPattern" patternUnits="userSpaceOnUse" width="20" height="20">
-                                    <line x1="0" y1="0" x2="20" y2="0" stroke="var(--primary-color)" stroke-width="0.5" stroke-dasharray="4,4"/>
-                                </pattern>
-                            </defs>
-                            <!-- Field boundary will be drawn here -->
-                            <polygon id="fieldBoundary" class="field-boundary" points=""></polygon>
-                            <!-- Flight path will be drawn here -->
-                            <g id="flightPath" class="flight-path"></g>
-                            <!-- Boundary points -->
-                            <g id="boundaryPoints"></g>
-                        </svg>
-
-                        <!-- Map markers -->
-                        <div class="map-markers" id="mapMarkers">
-                            <div class="dock-marker" style="left: 20%; top: 75%;">
-                                <i class="fas fa-warehouse"></i>
-                                <span class="marker-label">Dock</span>
-                            </div>
-                        </div>
-
-                        <!-- Drawing instruction -->
-                        <div class="drawing-instruction" id="drawingInstruction">
-                            <i class="fas fa-hand-pointer"></i>
-                            <span>Tap points to outline your field</span>
-                        </div>
+                        <!-- Leaflet map will be initialized here -->
+                    </div>
+                    
+                    <!-- Drawing instruction -->
+                    <div class="drawing-instruction" id="drawingInstruction">
+                        <i class="fas fa-hand-pointer"></i>
+                        <span>Tap to outline your field area</span>
+                    </div>
+                    
+                    <!-- Map loading indicator -->
+                    <div class="map-loading" id="mapLoading">
+                        <div class="loading-spinner"></div>
+                        <span>Loading map...</span>
                     </div>
 
                     <!-- Map Controls -->
@@ -587,6 +582,28 @@
                                 <span class="slider-value" id="flightSpeedValue">8 m/s</span>
                             </div>
                         </div>
+
+                        <div class="option-group chemical-mix-group">
+                            <label>Chemical Mix (must total 100%)</label>
+                            <div class="mix-total" id="mixTotal">Total: 100%</div>
+                            <div class="mix-sliders">
+                                <div class="mix-row">
+                                    <span class="mix-label">Jug A</span>
+                                    <input type="range" id="jugA" min="0" max="100" value="40" step="5" class="slider chemical-slider" data-index="0">
+                                    <span class="slider-value" id="jugAValue">40%</span>
+                                </div>
+                                <div class="mix-row">
+                                    <span class="mix-label">Jug B</span>
+                                    <input type="range" id="jugB" min="0" max="100" value="30" step="5" class="slider chemical-slider" data-index="1">
+                                    <span class="slider-value" id="jugBValue">30%</span>
+                                </div>
+                                <div class="mix-row">
+                                    <span class="mix-label">Jug C</span>
+                                    <input type="range" id="jugC" min="0" max="100" value="30" step="5" class="slider chemical-slider" data-index="2">
+                                    <span class="slider-value" id="jugCValue">30%</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <button class="generate-plan-btn" id="generatePlanBtn">
@@ -634,6 +651,15 @@
                             </div>
                         </div>
                     </div>
+
+                        <div class="mix-summary" id="mixSummary">
+                            <h4><i class="fas fa-vial"></i> Chemical Mix</h4>
+                            <div class="mix-summary-grid">
+                                <div class="mix-chip">Jug A <span id="jugAResult">40%</span></div>
+                                <div class="mix-chip">Jug B <span id="jugBResult">30%</span></div>
+                                <div class="mix-chip">Jug C <span id="jugCResult">30%</span></div>
+                            </div>
+                        </div>
                     <div class="summary-waypoints">
                         <h4><i class="fas fa-map-marked-alt"></i> Waypoints: <span id="waypointCount">24</span></h4>
                         <div class="waypoint-preview">
@@ -703,7 +729,7 @@
                     <div class="settings-list">
                         <div class="setting-item">
                             <div class="setting-info">
-                                <i class="fas fa-drone"></i>
+                                <i class="fa-solid fa-helicopter"></i>
                                 <span>Drone Configuration</span>
                             </div>
                             <i class="fas fa-chevron-right"></i>
@@ -820,7 +846,7 @@
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <button class="nav-item active" data-page="dronePage">
-                <i class="fas fa-drone"></i>
+                <i class="fa-solid fa-helicopter"></i>
                 <span>Drone</span>
             </button>
             <button class="nav-item" data-page="dockPage">
